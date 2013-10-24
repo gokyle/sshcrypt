@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-var Version = "0.1"
+var Version = "0.2"
 var pemType = "STOUTBOX SEALED MESSAGE"
 
 func ReadPrompt(prompt string) (in string, err error) {

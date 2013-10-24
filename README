@@ -22,10 +22,12 @@ sshcrypt [-ao] [-k encryption key(s)] [-s signature key] in out
                 private key that should be used to sign the file.
         in      The input filename. When sealing, this is the file
                 to be sealed. When unsealing, this is message to
-                be opened.
+                be opened. To read from standard input, use "-" as
+		the input filename.
 	out	The output filename. When sealing, this is the file
 		to store the sealed file as. When unsealing, this
-		is the file to store the opened file as.
+		is the file to store the opened file as. To write to
+		standard output, use "-" as the output filename.
 
 
 EXAMPLES
