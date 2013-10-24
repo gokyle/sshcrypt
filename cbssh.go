@@ -220,7 +220,7 @@ func Decrypt(privFile string, signer string, inFile, outFile string) bool {
 
 func main() {
 	fKey := flag.String("k", "", "key file(s)")
-	fDecrypt := flag.Bool("d", false, "decrypt")
+	fDecrypt := flag.Bool("o", false, "open input file")
 	fArmour := flag.Bool("a", false, "ASCII-armour output file")
 	fSigner := flag.String("s", "", "signature key")
 	flag.Parse()
