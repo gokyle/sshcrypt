@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"encoding/pem"
@@ -17,6 +18,17 @@ import (
 
 var Version = "0.1"
 var pemType = "STOUTBOX SEALED MESSAGE"
+
+func ReadPrompt(prompt string) (in string, err error) {
+	fmt.Printf("%s", prompt)
+	rd := bufio.NewReader(os.Stdin)
+	line, err := rd.ReadString('\n')
+	if err != nil {
+		return
+	}
+	in = strings.TrimSpace(line)
+	return
+}
 
 func zero(in []byte) {
 	if in == nil {
@@ -64,7 +76,7 @@ func Unarmour(box []byte) ([]byte, bool) {
 	return blk.Bytes, true
 }
 
-func Encrypt(sshPubs []string, signer string, inFile, outFile string, armour bool) bool {
+func Encrypt(sshPubs []string, signer string, inFile, outFile *os.File, armour bool) bool {
 	pubs := make([]stoutbox.PublicKey, 0)
 	for _, fName := range sshPubs {
 		fName = strings.TrimSpace(fName)
@@ -87,7 +99,7 @@ func Encrypt(sshPubs []string, signer string, inFile, outFile string, armour boo
 		}
 		pubs = append(pubs, spub)
 	}
-	fData, err := ioutil.ReadFile(inFile)
+	fData, err := ioutil.ReadAll(inFile)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -143,7 +155,7 @@ func Encrypt(sshPubs []string, signer string, inFile, outFile string, armour boo
 		box = Armour(box)
 	}
 
-	err = ioutil.WriteFile(outFile, box, 0644)
+	_, err = outFile.Write(box)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -151,7 +163,7 @@ func Encrypt(sshPubs []string, signer string, inFile, outFile string, armour boo
 	return true
 }
 
-func Decrypt(privFile string, signer string, inFile, outFile string) bool {
+func Decrypt(privFile string, signer string, inFile, outFile *os.File) bool {
 	sshPriv, t, err := sshkey.LoadPrivateKeyFile(privFile)
 	if err != nil {
 		fmt.Println("Failed to load decryption key.")
@@ -167,7 +179,7 @@ func Decrypt(privFile string, signer string, inFile, outFile string) bool {
 	}
 	defer zero(priv)
 
-	fData, err := ioutil.ReadFile(inFile)
+	fData, err := ioutil.ReadAll(inFile)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -175,7 +187,7 @@ func Decrypt(privFile string, signer string, inFile, outFile string) bool {
 
 	box, ok := Unarmour(fData)
 	if !ok {
-		box = fData
+		box = fData[:len(box)-2]
 	}
 
 	var msg []byte
@@ -211,7 +223,7 @@ func Decrypt(privFile string, signer string, inFile, outFile string) bool {
 		return false
 	}
 
-	err = ioutil.WriteFile(outFile, msg, 0644)
+	_, err = outFile.Write(msg)
 	if err != nil {
 		fmt.Println(err.Error())
 		return false
@@ -224,6 +236,7 @@ func main() {
 	fDecrypt := flag.Bool("o", false, "open input file")
 	fArmour := flag.Bool("a", false, "ASCII-armour output file")
 	fSigner := flag.String("s", "", "signature key")
+	fOverwrite := flag.Bool("f", false, "force overwriting files")
 	flag.Parse()
 
 	if flag.NArg() != 2 {
@@ -233,13 +246,49 @@ func main() {
 
 	inFile := flag.Args()[0]
 	outFile := flag.Args()[1]
+	var in, out *os.File
+	var err error
+
+	if inFile == "-" {
+		in = os.Stdin
+	} else {
+		in, err = os.Open(inFile)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+		defer in.Close()
+	}
+
+	if outFile == "-" {
+		out = os.Stdout
+	} else {
+		if _, err = os.Stat(outFile); !os.IsNotExist(err) && !*fOverwrite {
+			fmt.Printf("%s already exists.\n", outFile)
+			yn, err := ReadPrompt("Overwrite (y/n)? ")
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
+			if strings.ToUpper(string(yn[0])) != "Y" {
+				os.Exit(1)
+			}
+		}
+		out, err = os.Create(outFile)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+		defer out.Close()
+	}
+
 	if !*fDecrypt {
 		keys := strings.Split(*fKey, ",")
 		if len(keys) == 0 {
 			fmt.Println("No keys specified.")
 			os.Exit(1)
 		}
-		ok := Encrypt(keys, *fSigner, inFile, outFile, *fArmour)
+		ok := Encrypt(keys, *fSigner, in, out, *fArmour)
 		if !ok {
 			fmt.Println("Failed to seal file.")
 			os.Exit(1)
@@ -248,7 +297,7 @@ func main() {
 			os.Exit(1)
 		}
 	} else {
-		ok := Decrypt(*fKey, *fSigner, inFile, outFile)
+		ok := Decrypt(*fKey, *fSigner, in, out)
 		if !ok {
 			fmt.Println("Failed to open sealed message.")
 			os.Exit(1)
