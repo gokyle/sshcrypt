@@ -1,0 +1,72 @@
+SSHCRYPT(1)
+
+sshcrypt seals a file using P521 ECDSA SSH keys with the stoutbox
+Cryptobox API[1]. The terminology used here follows the Cryptobox
+terminology: sealing refers to the process of securing a file, and
+opening is used to refer unsealing a file.
+
+
+USAGE
+sshcrypt [-ao] [-k encryption key(s)] [-s signature key] in out
+	-a	ASCII armour the file.
+	-k encryption key(s)
+                When unsealing, this is the private key file that
+                should be used to open the file. When sealing, this
+                is a comma-separated list of public key files that
+                the file should be sealed to.
+	-o	The input file should be opened. The default is
+		to seal the file.
+	-s signature key
+                When unsealing, this is the public key that was
+                used to sign the message. When sealing, this is the
+                private key that should be used to sign the file.
+        in      The input filename. When sealing, this is the file
+                to be sealed. When unsealing, this is message to
+                be opened.
+	out	The output filename. When sealing, this is the file
+		to store the sealed file as. When unsealing, this
+		is the file to store the opened file as.
+
+
+EXAMPLES
+To seal the passwords.txt file to peer1 and peer2:
+	sshcrypt -k ~/keys/peer1.pub,~/keys/peer2.pub passwords.txt \
+		 passwords.box
+
+To open the passwords.box file using the standard SSH ECDSA key:
+	sshcrypt -o -k ~/.ssh/id_ecdsa passwords.box passwords.txt
+
+To seal the passwords.txt file to peer1, signing with the standard
+ECDSA SSH key:
+	sshcrypt -k ~/keys/peer1.pub -s ~/.ssh/id_ecdsa passwords.txt \
+		 passwords.box
+
+To open the passwords.box file, checking the signature key from peer2:
+	sshcrypt -o -k ~/.ssh/id_ecdsa -s ~/keys/peer2.pub passwords.box \
+		passwords.txt
+
+
+MOTIVATION
+Given the current doubts as to the cryptographic veracity of the
+finite-field cryptography used by PGP, a stop-gap measure for
+securing files was needed. sshcrypt uses the Cryptobox API, using
+the strongest level of cryptography available at this time for
+securing files.
+
+
+LICENSE
+sshcrypt is released under the ISC license.
+
+
+NOTE ON KEY RESTRICTIONS
+521-bit ECDSA SSH keys should be the default for SSH as well ;
+there's no performance reason not to. This also simplifies the code
+and provides the maximum security level.
+
+
+AUTHOR
+sshcrypt was written by Kyle Isom <kyle@tyrfingr.is>. The author's
+public key is included in the repo (kyle.pub) for comments.
+
+
+[1] http://cryptobox.tyrfingr.is
