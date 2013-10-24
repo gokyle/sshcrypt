@@ -67,6 +67,7 @@ func Unarmour(box []byte) ([]byte, bool) {
 func Encrypt(sshPubs []string, signer string, inFile, outFile string, armour bool) bool {
 	pubs := make([]stoutbox.PublicKey, 0)
 	for _, fName := range sshPubs {
+		fName = strings.TrimSpace(fName)
 		pub, err := sshkey.LoadPublicKeyFile(fName, true)
 		if err != nil {
 			fmt.Printf("Failed to load SSH key %s.\n", fName)

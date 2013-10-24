@@ -1,9 +1,9 @@
 SSHCRYPT(1)
 
 sshcrypt seals a file using P521 ECDSA SSH keys with the stoutbox
-Cryptobox API[1]. The terminology used here follows the Cryptobox
-terminology: sealing refers to the process of securing a file, and
-opening is used to refer unsealing a file.
+module of the Cryptobox API[1]. The terminology used here follows
+the Cryptobox terminology: sealing refers to the process of securing
+a file, and opening is used to refer unsealing a file.
 
 
 USAGE
@@ -55,8 +55,7 @@ MOTIVATION
 Given the current doubts as to the cryptographic veracity of the
 finite-field cryptography used by PGP, a stop-gap measure for
 securing files was needed. sshcrypt uses the Cryptobox API, using
-the strongest level of cryptography available at this time for
-securing files.
+the strongest level of cryptography available at this time.
 
 
 LICENSE
