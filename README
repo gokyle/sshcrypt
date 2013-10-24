@@ -33,6 +33,11 @@ To seal the passwords.txt file to peer1 and peer2:
 	sshcrypt -k ~/keys/peer1.pub,~/keys/peer2.pub passwords.txt \
 		 passwords.box
 
+Some shells won't tab-complete paths without spaces between them;
+to work around this, enclose the key paths in quotes:
+	sshcrypt -k '~/keys/peer1.pub, ~/keys/peer2.pub' passwords.txt \
+		 passwords.box
+
 To open the passwords.box file using the standard SSH ECDSA key:
 	sshcrypt -o -k ~/.ssh/id_ecdsa passwords.box passwords.txt
 
