@@ -6,4 +6,4 @@ TODO LIST
 [X] Clean up codebase. This was hacked out as a reference, and while
     cryptographically secure, it would benefit from a general tidying-up
     of the code.
-[ ] Write documentation for sshsign(1).
+[X] Write documentation for sshsign(1).

@@ -1,0 +1,58 @@
+SSHSIGN(1)
+
+sshsign generates a signature of the input file, or verifies a signature
+againstr
+
+USAGE
+sshsign [-afv] [-k keyfile] [-file filename] input file
+
+	-a	ASCII-armour the signature. Only applies when generaitng
+		signatures.
+	-f	force overwriting of output files.
+	-file filename
+                When signing a file, this is the file that the
+                signature should be saved as. It defaults to standard
+                output. When verifying a signature, this is the
+                signature to be verified.
+	-k keyfile
+		When signing a file, this is the private key to use
+		for signatures. When verifying a signature, this is
+		the public key to verify the signature with.
+	-v	Verify a signature. The default is to sign a file.
+	input file
+		This is the file that should be signed, or for which
+		the signature was generated.
+
+
+EXAMPLES
+To sign the file release.tgz with the default SSH key, signing to
+release.tgz.sig:
+	sshcrypt -file release.tgz.sig release.tgz
+
+To verify the previously signed file using the ~/.ssh/id_ecdsa.pub key:
+	sshcrypt -v -k ~/.ssh/id_ecdsa.pub -file release.tgz.sig release.tgz
+
+
+MOTIVATION
+Given the current doubts as to the cryptographic veracity of the
+finite-field cryptography used by PGP, a stop-gap measure for
+securing files was needed. sshsign uses the Cryptobox API, using
+the strongest level of cryptography available at this time.
+
+
+LICENSE
+sshsign is released under the ISC license.
+
+
+NOTE ON KEY RESTRICTIONS
+521-bit ECDSA SSH keys should be the default for SSH as well ;
+there's no performance reason not to. This also simplifies the code
+and provides the maximum security level.
+
+
+AUTHOR
+sshsign was written by Kyle Isom <kyle@tyrfingr.is>. The author's
+public key is included in the repo (kyle.pub) for comments.
+
+
+[1] http://cryptobox.tyrfingr.is
