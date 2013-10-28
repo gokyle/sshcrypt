@@ -89,9 +89,14 @@ func Decrypt(privFile string, signer string, inFile, outFile *os.File) bool {
 		return false
 	}
 
+	if len(fData) < stoutbox.Overhead {
+		fmt.Println("Invalid sealed message.")
+		return false
+	}
+
 	box, ok := common.UnarmourCrypt(fData)
 	if !ok {
-		box = fData[:len(box)-2]
+		box = fData
 	}
 
 	var msg []byte
