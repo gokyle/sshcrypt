@@ -1,0 +1,108 @@
+sshcrypt: a proof-of-concept stopgap
+
+sshcrypt is a proof-of-concept sketch, written in Go, of a stopgap
+system to replace PGP. The issue is that PGP is built on finite-field
+cryptography, i.e.  RSA, and there is growing evidence pointing to
+the weakness of this type of cryptography. Secure modern systems
+should begin to switch over to elliptic curve cryptography; sshcrypt
+does just that. It uses SSH keys, something many users already have,
+and avoids potential downgrade attacks and user confusion over
+cipher selection by providing just one choice: ECDSA with 521-bit
+keys.
+
+While the pieces of sshcrypt are all solid, it is the user interface
+that represents the "sketched" portion. It certainly needs more
+work, starting with the development of a consistent set of flags.
+Further fleshing out of this idea should see graphical applications
+to facilitate their use.
+
+The tools provided are:
+
+	sshcrypt: provides message encryption, both signed and unsigned
+	sealed messages.
+
+	sshsign: provides message signatures without encryption.
+
+
+HISTORY
+sshcrypt is born of two major Go components stitched together. The
+first is the sshkey[1] package I wrote. This package parses and
+serialises SSH keys into standard cryptographic forms that can be
+used with the Go standard library. The sshkeygen[2] tool is a
+frontend to this library, allowing for the generation of new keys
+(that are compatible with OpenSSH) and fingerprinting existing keys.
+The original prototype to sshcrypt was sshbox[3], which uses both
+RSA and ECDSA keys. It was another proof-of-concept and test of the
+sshkey package's ability to successfully use SSH keys as general-purpose
+cryptographic keys. sshkey provides the key interface to sshcrypt.
+
+The second component is Cryptobox[4]. This is a project to build a
+set of easy-to-use cryptographic modules for use in new projects
+built on standard ciphers and elliptic curve cryptography. Cryptobox
+supplies the cryptography for sshcrypt.
+
+These two components are mated using the cbecdsa[5] package, which
+converts SSH keys into Cryptobox keys and vice versa.
+
+
+DESIGN CHOICES
+There are a few important design choices that were made with sshcrypt:
+first, only one cipher each for encryption and signatures is
+permitted. This allays a number of problems, including downgrade
+attacks (in which the attacker tricks the communicating parties
+into using weaker ciphers) and general user confusion as to the
+most appropriate cipher to use.
+
+SSH keys were chosen due to their prevelance in the world. Enough
+users have SSH keys that it makes sense to leverage these keys,
+instead of requiring a new set of keys with a different format to
+be generated (which would require users to keep track of the security
+of another set of keys). 521-bit ECDSA keys are chosen due to their
+security and the fact that, even on embedded hardware, they still remain
+performant. (In fact, every systems tested, the stoutbox
+encryption outperformed RSA encryption with a weaker key.) While the
+NSA recommends 384-bit elliptic curve keys, the additional security
+provided by the stronger 521-bit keys comes with a very low cost.
+
+Finally, prebuilt and verified systems are used to compose the larger
+programs; these pieces are independently verified and can be validated
+within the context of the larger program.
+
+
+CRYPTOGRAPHY
+The stoutbox module used by the package employs ECDSA over the secp521r1
+curve for digital signatures, and ECIES using ephemeral secp521r1 keys
+for the key exchange, and AES-256 in CTR mode with HMAC-SHA-384 message
+tags for the underlying symmetric cipher. The Cryptobox specifications[6]
+have the full specification of the Cryptobox module, including the formats
+for messages.
+
+
+LICENSE
+sshcrypt is released under the ISC license.
+
+Copyright (c) 2013 Kyle Isom <kyle@tyrfingr.is>
+
+Permission to use, copy, modify, and distribute this software for any
+purpose with or without fee is hereby granted, provided that the above 
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. 
+
+
+[1] https://github.com/gokyle/sshkey/ or
+    http://hg.tyrfingr.is/kyle/sshkey
+[2] https://github.com/gokyle/sshkeygen or
+    http://hg.tyrfingr.is/kyle/sshkeygen
+[3] https://github.com/gokyle/sshbox or
+    http://hg.tyrfingr.is/kyle/sshbox
+[4] http://cryptobox.tyrfingr.is
+[5] https://github.com/cryptobox/cbecdsa or
+    http://hg.tyrfingr.is/kyle/cbecdsa
+[6] http://cryptobox.tyrfingr.is/files/cryptobox_spec.pdf
