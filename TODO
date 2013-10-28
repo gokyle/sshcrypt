@@ -3,6 +3,7 @@ TODO LIST
 [X] change file handling to use io.{Reader,Writer}. The benefit to
     this is being able to read from stdin and write to stdout, which
     would make sshcrypt a useful middleware program.
-[ ] Clean up codebase. This was hacked out as a reference, and while
+[X] Clean up codebase. This was hacked out as a reference, and while
     cryptographically secure, it would benefit from a general tidying-up
     of the code.
+[ ] Write documentation for sshsign(1).
