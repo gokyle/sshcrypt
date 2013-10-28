@@ -65,7 +65,7 @@ sshcrypt is released under the ISC license.
 
 
 NOTE ON KEY RESTRICTIONS
-521-bit ECDSA SSH keys should be the default for SSH as well ;
+521-bit ECDSA SSH keys should be the default for SSH as well;
 there's no performance reason not to. This also simplifies the code
 and provides the maximum security level.
 
