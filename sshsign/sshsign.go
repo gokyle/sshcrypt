@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-func Sign(keyFile string, in, out *os.File) (ok bool) {
+func Sign(keyFile string, in, out *os.File, armour bool) (ok bool) {
 	priv, pub, ok := common.LoadPriv(keyFile)
 	if !ok {
 		return
@@ -26,6 +26,10 @@ func Sign(keyFile string, in, out *os.File) (ok bool) {
 	if !ok {
 		fmt.Println("Signing failed.")
 		return
+	}
+
+	if armour {
+		sig = common.ArmourSigned(sig)
 	}
 
 	_, err = out.Write(sig)
@@ -50,16 +54,22 @@ func Verify(keyFile string, in, sig *os.File) (ok bool) {
 		return
 	}
 
+	var signature []byte
+	if signature, ok = common.UnarmourSigned(sigData); !ok {
+		signature = sigData
+	}
+
 	inData, err := ioutil.ReadAll(in)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	return stoutbox.Verify(inData, sigData, pub)
+	return stoutbox.Verify(inData, signature, pub)
 }
 
 func main() {
+	fArmour := flag.Bool("a", false, "ASCII armour signature")
 	fOverwrite := flag.Bool("f", false, "force overwrite")
 	fKeyFile := flag.String("k", "", "signature key")
 	fVerify := flag.Bool("v", false, "verify signature")
@@ -108,13 +118,12 @@ func main() {
 
 	var ok bool
 	if *fVerify {
-		fmt.Println("verify", inFile, "signature", *fOutputFile)
 		ok = Verify(*fKeyFile, in, out)
 	} else {
 		if *fKeyFile == "" {
 			*fKeyFile = common.DefaultKeyFile()
 		}
-		ok = Sign(*fKeyFile, in, out)
+		ok = Sign(*fKeyFile, in, out, *fArmour)
 	}
 
 	if !ok {
